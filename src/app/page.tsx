@@ -54,24 +54,22 @@ export default function HomePage() {
 
     try {
       // Complete upload animation
-      setTimeout(() => {
-        setUploadProgress(100);
-        clearInterval(progressInterval);
-      }, 1500);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setUploadProgress(100);
+      clearInterval(progressInterval);
 
       // Start analysis
-      setTimeout(() => {
-        setIsUploading(false);
-        setAppState("analyzing");
-        setAnalysisProgress({
-          status: "extracting",
-          currentStep: 1,
-          totalSteps: 4,
-          processedClaims: 0,
-          totalClaims: 0,
-          message: "Extracting claims from document...",
-        });
-      }, 2000);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsUploading(false);
+      setAppState("analyzing");
+      setAnalysisProgress({
+        status: "extracting",
+        currentStep: 1,
+        totalSteps: 4,
+        processedClaims: 0,
+        totalClaims: 0,
+        message: "Extracting claims from document...",
+      });
 
       // Call the API
       const formData = new FormData();
@@ -109,8 +107,14 @@ export default function HomePage() {
       clearInterval(analysisInterval);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Analysis failed");
+        let errorMsg = "Analysis failed";
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch {
+          errorMsg = `Server error: ${response.status} ${response.statusText} (This is likely a Vercel timeout)`;
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -125,10 +129,9 @@ export default function HomePage() {
       });
 
       // Short delay to show completion
-      setTimeout(() => {
-        setReport(data.report);
-        setAppState("report");
-      }, 1500);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setReport(data.report);
+      setAppState("report");
     } catch (err) {
       clearInterval(progressInterval);
       setIsUploading(false);

@@ -59,7 +59,7 @@ export async function extractClaims(
 
     try {
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4.1",
+        model: process.env.OPENAI_MODEL || "gpt-4o",
         messages: [
           { role: "system", content: EXTRACTION_PROMPT },
           {
