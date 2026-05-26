@@ -1,12 +1,4 @@
-// @ts-ignore
-if (typeof global.DOMMatrix === 'undefined') global.DOMMatrix = class DOMMatrix {} as any;
-// @ts-ignore
-if (typeof global.ImageData === 'undefined') global.ImageData = class ImageData {} as any;
-// @ts-ignore
-if (typeof global.Path2D === 'undefined') global.Path2D = class Path2D {} as any;
-
-// @ts-ignore
-const pdf = require("pdf-parse/lib/pdf-parse.js");
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export interface ParsedPDF {
   text: string;
@@ -15,11 +7,32 @@ export interface ParsedPDF {
 }
 
 export async function parsePDF(buffer: Buffer): Promise<ParsedPDF> {
-  const data = await pdf(buffer);
+  const data = new Uint8Array(buffer);
+  
+  // Load the PDF document
+  const loadingTask = pdfjsLib.getDocument({
+    data,
+    useWorkerFetch: false,
+    useSystemFonts: true,
+  });
+  
+  const pdfDocument = await loadingTask.promise;
+  const numPages = pdfDocument.numPages;
+  let fullText = "";
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    const page = await pdfDocument.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      // @ts-ignore
+      .map((item) => item.str)
+      .join(" ");
+    fullText += pageText + "\n\n";
+  }
 
   return {
-    text: data.text,
-    totalPages: data.numpages,
-    info: data.info || {},
+    text: fullText,
+    totalPages: numPages,
+    info: {},
   };
 }
