@@ -1,4 +1,5 @@
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+// @ts-ignore
+import PDFParser from "pdf2json";
 
 export interface ParsedPDF {
   text: string;
@@ -7,32 +8,26 @@ export interface ParsedPDF {
 }
 
 export async function parsePDF(buffer: Buffer): Promise<ParsedPDF> {
-  const data = new Uint8Array(buffer);
-  
-  // Load the PDF document
-  const loadingTask = pdfjsLib.getDocument({
-    data,
-    useWorkerFetch: false,
-    useSystemFonts: true,
+  return new Promise((resolve, reject) => {
+    const pdfParser = new PDFParser(null, true);
+
+    pdfParser.on("pdfParser_dataError", (errData: any) => {
+      reject(new Error(errData.parserError));
+    });
+
+    pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
+      const text = pdfParser.getRawTextContent();
+      resolve({
+        text: text,
+        totalPages: pdfData.Pages ? pdfData.Pages.length : 1,
+        info: {},
+      });
+    });
+
+    try {
+      pdfParser.parseBuffer(buffer);
+    } catch (err) {
+      reject(err);
+    }
   });
-  
-  const pdfDocument = await loadingTask.promise;
-  const numPages = pdfDocument.numPages;
-  let fullText = "";
-
-  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-    const page = await pdfDocument.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      // @ts-ignore
-      .map((item) => item.str)
-      .join(" ");
-    fullText += pageText + "\n\n";
-  }
-
-  return {
-    text: fullText,
-    totalPages: numPages,
-    info: {},
-  };
 }
