@@ -7,7 +7,7 @@ import type {
 } from "@/types";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
 });
 
 const VERDICT_PROMPT = `You are an expert fact-checker and critical analyst. Given a claim from a document and web search evidence, determine the accuracy of the claim.

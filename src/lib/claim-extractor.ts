@@ -3,7 +3,7 @@ import type { ExtractedClaim } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
 });
 
 const EXTRACTION_PROMPT = `You are an expert fact-checker. Analyze the following document text and extract all factual claims that can be verified.
